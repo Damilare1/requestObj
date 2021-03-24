@@ -50,12 +50,6 @@ var entityModel = {
   resourceBinding: "",
 };
 
-var setEntityReq = {
-  objectModel: Entity,
-  method: "set",
-  arguments: [{ previous: "response" }, "output", "key"],
-};
-
 var displayRes = {
   reqName: "displayRes",
   objectModel: output,
