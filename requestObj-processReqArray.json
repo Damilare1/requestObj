@@ -1,0 +1,21 @@
+{
+  "resource": {
+    "serviceName": "SpreadsheetApp",
+    "entity": [
+      {
+        "method": "get",
+        "entityIdentifier": "ActiveSpreadsheet()"
+      },
+      {
+        "method": "get",
+        "entity": "Sheet",
+        "entityIdentifier": "ByName",
+        "entityName": "('cleanDataSet')",
+        "and": {
+          "method": "get",
+          "entity": "DataRange()"
+        }
+      }
+    ]
+  }
+}

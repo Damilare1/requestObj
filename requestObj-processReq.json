@@ -1,0 +1,9 @@
+{
+  "resource": {
+    "serviceName": "SpreadsheetApp",
+    "entity": {
+      "method": "get",
+      "entityIdentifier": "ActiveSpreadsheet()"
+    }
+  }
+}
