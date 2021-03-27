@@ -5,11 +5,9 @@
  * @property {string} [index] - requset index.
  * @property {Object} objectModel -namespace.
  * @property {string} method - request method available on name space.
- * @property {number} arguments - arguments to be passed into the method.
- * @property {string} [andThen] - call back for parallel requests.
- * @property {Object} callBackObjectModel - Object model where callback can be found.
+ * @property {Array.<String>} arguments - arguments to be passed into the method.
+ * @property {RequestObj} [andThen] - nested request object which isn't a callback.
  * @property {string} [callBack] - call back for single requests.
- * @property {RequestObj} [requestObj] - call back for single requests.
  */
 
 /**
@@ -44,30 +42,38 @@ var getElement = {
  */
 var entityModel4Html = {
   tagName: "tagName",
-  attributes: { class: "class.value", style: "style.value", src: "" },
+  attributes: { class: "classList", style: "style", src: "src" },
   children: ["all"],
 };
 
 class DOMConversion {
-  constructor() {}
-  static toJSON = (domElement) => {
-    return {
-      tagName: domElement.tagName,
-      attributes: {
-        class: [...domElement.classList],
-        style: [...domElement.style],
-        src: domElement.src || "",
-      },
-      children: Array.from(domElement.children),
-    };
-  };
+  constructor() { }
+
+  static toJSON(object, model) {
+    const output = {};
+    for (const [key, value] of Object.entries(model)) {
+      if (Operate.isObject(value)) {
+        output[key] = this.toJSON(object, value)
+      } else if (Operate.isArray(value) && key === "children") {
+        output[key] = Array.from(object[key], function (childItem) {
+          return this.toJSON(childItem, model);
+        }.bind(this))
+      }
+      else {
+        output[key] = object[value] || ''
+      }
+    }
+    return output;
+
+  }
+
   static displayDOMJSON = (domJSON) => {
     console.log(domJSON);
   };
 }
 
 class Storage {
-  constructor() {}
+  constructor() { }
   static saveToLocalStorage = (name, value) => {
     try {
       window.localStorage.setItem(name, JSON.stringify(value));
@@ -93,6 +99,8 @@ class Operate {
       value.constructor === Array
     );
   }
+
+  static isObject(value) { return value && typeof value === 'object' && value.constructor === Object; }
 
   static isIn(argA, argB) {
     return argB.indexOf(argA) > -1 ? true : false;
@@ -120,106 +128,77 @@ class Operate {
   }
 }
 class ActionSpaceEditor {
-  constructor() {}
+  constructor() {
+    this._flowResultState = {};
+  }
 
   /**
    * processes single request
    * @param {RequestObj} reqObj - request object
-   * @param {Object} [resultObj=null] - Optional parameter for passing result of previous requests
+   * @param {unknown} [resultObj=null] - Optional parameter for passing result of previous requests
    * @returns {Promise}
    */
-  static processReq(reqObj, resultObj = null) {
+  processReq(reqObj, resultObj = null) {
     var method = reqObj.objectModel[reqObj.method];
-    var objArgs = reqObj.arguments.slice();
-    if (resultObj) {
-      var resultObjKeys = Object.keys(resultObj);
-      objArgs.forEach(function (arg, index) {
-        if (Operate.isIn(arg, resultObjKeys)) {
-          objArgs[index] = resultObj[arg];
-        }
-      });
-      console.log(objArgs);
-    }
-    var process = method.apply(reqObj.objectModel, objArgs);
-    if (process) {
-      return Operate.handlePromise(process)
-        .then(function (result) {
-          if (result) {
-            var callBack =
-              reqObj.callBackObjectModel &&
-              reqObj.callBackObjectModel[reqObj.callBack]
-                ? reqObj.callBackObjectModel[reqObj.callBack]
-                : null;
-            if (callBack) {
-              return Operate.handlePromise(
-                callBack.apply(callBack.callBackObjectModel, [result])
-              )
-                .then(function (result) {
-                  return result;
-                })
-                .catch(function (err) {
-                  return err;
-                });
-            }
-          } else {
-            return null;
-          }
-        })
-        .catch(function (e) {
-          console.log(e);
-          return null;
-        });
-    }
-    return new Promise(function (resolve, _) {
-      resolve(null);
+    var objArgs = reqObj.arguments.map(function (argItem) {
+      if (argItem === "fromPrevious") return resultObj;
+      return argItem
     });
+    var processResult = method.apply(reqObj.objectModel, objArgs);
+    if (reqObj.callBack) {
+      var callBack = window[reqObj.callBack];
+      if (callBack) {
+        processResult = this.processReq(callBack, processResult);
+      }
+    }
+    return processResult;
   }
+
   /**
    * This method is used for parallel requests
    * @param {FlowRequest} reqObj - request object containing array of objects
    */
-  static processReqArray(reqObj) {
+  processReqArray(reqObj) {
+    const state = this._flowResultState;
     if (Operate.isFlowRequest(reqObj) && Operate.isArray(reqObj.flowRequest)) {
       var flowRequest = reqObj.flowRequest;
-      var resultObj = {};
-
-      /**
-       * This method is used for recursion and ensuring the requests are performed sequentially
-       * @param {number} index - Index of current request
-       */
-      function recursiveThen(index) {
-        const request = flowRequest[index];
-        this.processReq(request, resultObj).then(
-          function (result) {
-            resultObj[request.reqName] = result;
-            index++;
-            if (index < flowRequest.length) recursiveThen.call(this, index);
-          }.bind(ActionSpaceEditor)
-        );
-      }
-      recursiveThen.call(this, 0);
+      flowRequest.forEach(function (request) {
+        var requestArgs = request.arguments.map(function (reqArg) {
+          if (state[reqArg]) return state[reqArg];
+          return reqArg;
+        })
+        var updatedRequest = { ...request, arguments: requestArgs };
+        const result = this.processReq(updatedRequest);
+        if (result) {
+          state[request.reqName] = result;
+        }
+      }.bind(this))
     }
+    console.log(state)
     return null;
   }
   /**
    * This method is used for nested requests
    * @param {RequestObj} reqObj - request object containing nested requests
    */
-  static processReqNestedObject(reqObj) {
-    var resultObj = {};
+  processReqNestedObject(reqObj) {
     /**
      * This method is used for recursion and ensuring the requests are performed sequentially
-     * @param {RequestObj} obj - Current request object
+     * @param {RequestObj} request - Current request object
      */
-    function recursiveThen(obj) {
-      this.processReq(obj, resultObj).then(
-        function (result) {
-          resultObj[obj.reqName] = result;
-          if (obj.requestObj) {
-            recursiveThen.call(this, obj.requestObj);
-          }
-        }.bind(ActionSpaceEditor)
-      );
+    function recursiveThen(request) {
+      var requestArgs = request.arguments.map(function (reqArg) {
+        if (this._flowResultState[reqArg]) return this._flowResultState[reqArg];
+        return reqArg;
+      }.bind(this));
+      var updatedRequest = { ...request, arguments: requestArgs };
+      const result = this.processReq(updatedRequest);
+      if (result) {
+        this._flowResultState[request.reqName] = result;
+      }
+      if (request.andThen) {
+        recursiveThen.call(this, request.andThen);
+      }
     }
     recursiveThen.call(this, reqObj);
   }
@@ -233,8 +212,7 @@ var singleReq = {
   objectModel: document,
   method: "getElementById",
   arguments: ["test"],
-  callBackObjectModel: DOMConversion,
-  callBack: ["toJSON"],
+  callBack: "convertToJSON",
 };
 
 /**
@@ -243,6 +221,15 @@ var singleReq = {
 var convertToJSON = {
   objectModel: DOMConversion,
   method: "toJSON",
+  arguments: ["fromPrevious", entityModel4Html],
+};
+
+/**
+ * @type RequestObj
+ */
+var displayJSON = {
+  objectModel: DOMConversion,
+  method: "displayDOMJSON",
   arguments: ["fromPrevious"],
 };
 
@@ -256,8 +243,7 @@ var actionFlowModelReq = {
       objectModel: document,
       method: "getElementById",
       arguments: ["test"],
-      callBackObjectModel: DOMConversion,
-      callBack: ["toJSON"],
+      callBack: "convertToJSON",
     },
     {
       reqName: "saveElementToLocalStorage",
@@ -270,8 +256,7 @@ var actionFlowModelReq = {
       objectModel: Storage,
       method: "getFromLocalStorage",
       arguments: ["domJSON"],
-      callBackObjectModel: DOMConversion,
-      callBack: ["displayDOMJSON"],
+      callBack: "displayJSON"
     },
   ],
 };
@@ -284,28 +269,26 @@ var nestedFlowModelReq = {
   objectModel: document,
   method: "getElementById",
   arguments: ["test"],
-  callBackObjectModel: DOMConversion,
-  callBack: ["toJSON"],
-  requestObj: {
+  callBack: "convertToJSON",
+  andThen: {
     reqName: "saveElementToLocalStorage",
     objectModel: Storage,
     method: "saveToLocalStorage",
     arguments: ["domJSON", "convertElementToJSON"],
-    requestObj: {
+    andThen: {
       reqName: "displaySavedElement",
       objectModel: Storage,
       method: "getFromLocalStorage",
       arguments: ["domJSON"],
-      callBackObjectModel: DOMConversion,
-      callBack: ["displayDOMJSON"],
+      callBack: "displayJSON"
     },
   },
 };
 
-ActionSpaceEditor.processReq(singleReq).then(function(result){
-  console.log(result)
-})
+var engine = new ActionSpaceEditor();
+// var DOMJson = engine.processReq(singleReq);
+// console.log(DOMJson)
 
-ActionSpaceEditor.processReqArray(actionFlowModelReq)
+// engine.processReqArray(actionFlowModelReq)
 
-ActionSpaceEditor.processReqNestedObject(nestedFlowModelReq)
+engine.processReqNestedObject(nestedFlowModelReq)
