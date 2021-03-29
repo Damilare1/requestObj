@@ -11,11 +11,22 @@ class ActionEngine {
    */
   processReq(reqObj, resultObj = null) {
     var method = reqObj.objectModel[reqObj.method];
-    var objArgs = reqObj.arguments.map(function (argItem) {
-      if (argItem === "fromPrevious") return resultObj;
-      return argItem
-    });
-    var processResult = method.apply(reqObj.objectModel, objArgs);
+    if (reqObj.arguments) {
+      for (var i = 0; i < reqObj.arguments.length; i++) {
+        if (reqObj.arguments[i] === "fromPrevious") {
+          reqObj.arguments[i] = resultObj;
+        }
+      }
+    }
+
+    var processResult;
+
+    if (method && Operate.isFunction(method)) {
+      processResult = method.apply(reqObj.objectModel, reqObj.arguments);
+    }
+    if (Operate.isObject(method)) {
+      processResult = method[reqObj.arguments]
+    }
     if (reqObj.callBack) {
       var callBack = window[reqObj.callBack];
       if (callBack) {
@@ -33,19 +44,22 @@ class ActionEngine {
     const state = this._flowResultState;
     if (Operate.isFlowRequest(reqObj) && Operate.isArray(reqObj.flowRequest)) {
       var flowRequest = reqObj.flowRequest;
-      flowRequest.forEach(function (request) {
-        var requestArgs = request.arguments.map(function (reqArg) {
-          if (state[reqArg]) return state[reqArg];
-          return reqArg;
-        })
+      for (var i = 0; i < flowRequest.length; i++) {
+        var request = flowRequest[i];
+        var args = request.arguments;
+        var requestArgs = [];
+        for (var p = 0; p < args.length; p++) {
+          var reqArg = args[p];
+          if (state[reqArg]) { requestArgs[p] = state[reqArg]; }
+          else { requestArgs[p] = reqArg; }
+        }
         var updatedRequest = { ...request, arguments: requestArgs };
         const result = this.processReq(updatedRequest);
         if (result) {
           state[request.reqName] = result;
         }
-      }.bind(this))
+      }
     }
-    console.log(state)
     return null;
   }
   /**
@@ -58,10 +72,15 @@ class ActionEngine {
      * @param {RequestObj} request - Current request object
      */
     function recursiveThen(request) {
-      var requestArgs = request.arguments.map(function (reqArg) {
-        if (this._flowResultState[reqArg]) return this._flowResultState[reqArg];
-        return reqArg;
-      }.bind(this));
+      var reqArg = request.arguments;
+      var requestArgs = [];
+      for (var j = 0; j < reqArg.length; j++) {
+        if (this._flowResultState[reqArg]) {
+          requestArgs[j] = this._flowResultState[reqArg]
+        } else {
+          requestArgs[j] = reqArg;
+        }
+      }
       var updatedRequest = { ...request, arguments: requestArgs };
       const result = this.processReq(updatedRequest);
       if (result) {
@@ -76,9 +95,9 @@ class ActionEngine {
 }
 
 var engine = new ActionEngine();
-// var DOMJson = engine.processReq(singleReq);
-// console.log(DOMJson)
+var DOMJson = engine.processReq(singleReq);
+console.log(DOMJson)
 
-// engine.processReqArray(actionFlowModelReq)
+engine.processReqArray(actionFlowModelReq)
 
 engine.processReqNestedObject(nestedFlowModelReq)

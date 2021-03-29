@@ -1,34 +1,37 @@
 
 class DOMConversion {
-    constructor() { }
-  
-    static toJSON(object, model, isAttribute = false) {
-      const output = {};
-      for (const [key, value] of Object.entries(model)) {
-        if (Operate.isObject(value)) {
-          if (key === "attributes") {
-            output[key] = this.toJSON(object, value, true)
-          } else {
-            output[key] = this.toJSON(object, value)
+  constructor() { }
+
+  static toJSON(object, model, isAttribute = false) {
+    const output = {};
+    for (const [key, value] of Object.entries(model)) {
+      if (Operate.isObject(value)) {
+        // Object keys list
+        var props = Object.keys(value);
+        output[key] = {}
+        for (var i = 0; i < props.length; i++) {
+          if(object[key][props[i]] && object[key][props[i]].nodeValue){
+            output[key][props[i]] = object[key][props[i]] && object[key][props[i]].nodeValue;
+          }else if(object[key][props[i]] && !object[key][props[i]].nodeValue){
+            output[key][props[i]] = object[key][props[i]];
           }
-        } else if (Operate.isArray(value) && key === "children") {
-          output[key] = Array.from(object[key], function (childItem) {
+        }
+      } else if (Operate.isArray(value)) {
+        output[key] = Array.from(object[key], function (childItem) {
+          if(childItem instanceof HTMLElement){
             return this.toJSON(childItem, model);
-          }.bind(this))
-        }
-        else {
-          if (isAttribute) {
-            output[key] = object.getAttribute(value) || ''
-          } else {
-            output[key] = object[value] || ''
           }
-        }
+        }.bind(this))
       }
-      return output;
-  
+      else {
+        output[key] = object[value] || ''
+      }
     }
-  
-    static displayDOMJSON = (domJSON) => {
-      console.log(domJSON);
-    };
+    return output;
+
   }
+
+  static displayDOMJSON = (domJSON) => {
+    console.log(domJSON);
+  };
+}
