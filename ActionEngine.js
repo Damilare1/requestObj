@@ -11,11 +11,22 @@ class ActionEngine {
    */
   processReq(reqObj, resultObj = null) {
     var method = reqObj.objectModel[reqObj.method];
-    var objArgs = reqObj.arguments.map(function (argItem) {
-      if (argItem === "fromPrevious") return resultObj;
-      return argItem
-    });
-    var processResult = method.apply(reqObj.objectModel, objArgs);
+    if (reqObj.arguments) {
+      for (var i = 0; i < reqObj.arguments.length; i++) {
+        if (reqObj.arguments[i] === "fromPrevious") {
+          reqObj.arguments[i] = resultObj;
+        }
+      }
+    }
+
+    var processResult;
+
+    if(Operate.isFunction(method)){
+      processResult = method.apply(reqObj.objectModel, reqObj.arguments);
+    }
+    if(Operate.isObject(method)){
+      processResult = method[reqObj.arguments]
+    }
     if (reqObj.callBack) {
       var callBack = window[reqObj.callBack];
       if (callBack) {
@@ -76,9 +87,9 @@ class ActionEngine {
 }
 
 var engine = new ActionEngine();
-// var DOMJson = engine.processReq(singleReq);
-// console.log(DOMJson)
+var DOMJson = engine.processReq(singleReq);
+console.log(DOMJson)
 
-// engine.processReqArray(actionFlowModelReq)
+engine.processReqArray(actionFlowModelReq)
 
 engine.processReqNestedObject(nestedFlowModelReq)
