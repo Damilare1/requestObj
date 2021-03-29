@@ -81,7 +81,7 @@ class ActionEngine {
           requestArgs[j] = reqArg[j];
         }
       }
-
+      
       var updatedRequest = { ...request, arguments: requestArgs };
       const result = this.processReq(updatedRequest);
       if (result) {
@@ -89,7 +89,11 @@ class ActionEngine {
       }
 
       if (request.andThen) {
-        recursiveThen.call(this, request.andThen);
+        var nestedReq = request.andThen;
+        if (!nestedReq.objectModel) {
+          nestedReq.objectModel = result;
+        }
+        recursiveThen.call(this, nestedReq);
       }
     }
     recursiveThen.call(this, reqObj);
