@@ -89,4 +89,17 @@ var nestedFlowModelReq = {
     },
 };
 
+var setInnerHTML = {
+    reqName: "getFirstElement",
+    objectModel: document,
+    method: "getElementById",
+    arguments: ["first"],
+    andThen: {
+        reqName: "addSecondToFirst",
+        objectModel: DOMConversion,
+        method: "addInnerHTML",
+        arguments: ["getFirstElement", "<div>I am nested</div>"],
+    }
+};
+
 

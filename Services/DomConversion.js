@@ -31,7 +31,16 @@ class DOMConversion {
 
   }
 
-  static displayDOMJSON = (domJSON) => {
+  static displayDOMJSON(domJSON){
     console.log(domJSON);
-  };
+  }
+
+    /**
+   * This method is used for adding InnerHTML to DOM Elements
+   * @param {HTMLElement} DOMElement - HTML DOM Element to add HTML to
+   * @param {HTMLElement} inputElem - HTML Input Element to be added into DOMElement
+   */
+  static addInnerHTML(DOMElement, inputElem){
+    DOMElement.innerHTML = inputElem;
+  }
 }
