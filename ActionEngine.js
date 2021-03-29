@@ -75,17 +75,19 @@ class ActionEngine {
       var reqArg = request.arguments;
       var requestArgs = [];
       for (var j = 0; j < reqArg.length; j++) {
-        if (this._flowResultState[reqArg]) {
-          requestArgs[j] = this._flowResultState[reqArg]
+        if (this._flowResultState[reqArg[j]]) {
+          requestArgs[j] = this._flowResultState[reqArg[j]];
         } else {
-          requestArgs[j] = reqArg;
+          requestArgs[j] = reqArg[j];
         }
       }
+
       var updatedRequest = { ...request, arguments: requestArgs };
       const result = this.processReq(updatedRequest);
       if (result) {
         this._flowResultState[request.reqName] = result;
       }
+
       if (request.andThen) {
         recursiveThen.call(this, request.andThen);
       }
@@ -100,4 +102,6 @@ console.log(DOMJson)
 
 engine.processReqArray(actionFlowModelReq)
 
-engine.processReqNestedObject(nestedFlowModelReq)
+engine.processReqNestedObject(setInnerHTML)
+
+engine.processReqNestedObject(setInnerHTMLWithoutObjectModel)
