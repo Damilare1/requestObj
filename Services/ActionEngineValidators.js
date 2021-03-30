@@ -1,6 +1,5 @@
-
 class Validators {
-    constructor() { }
+    constructor() {}
 
     static isSingleRequest(obj) {
         return obj && Operate.isObject(obj) && obj.objectModel && obj.method && !obj.andThen && !obj.flowRequest;
@@ -12,6 +11,6 @@ class Validators {
 
 
     static isNestedRequest(obj) {
-        return obj && Operate.isObject(obj) && obj.andThen && Operate.isObject(obj.andThen);
+        return obj && Operate.isObject(obj) && obj.andThen && Operate.isArray(obj.andThen);
     }
 }

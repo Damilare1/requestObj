@@ -9,8 +9,8 @@ var getElement = {
 };
 
 /**
-* @type RequestObj
-*/
+ * @type RequestObj
+ */
 var singleReq = {
     reqName: "singleReq",
     objectModel: document,
@@ -20,8 +20,8 @@ var singleReq = {
 };
 
 /**
-* @type RequestObj
-*/
+ * @type RequestObj
+ */
 var convertToJSON = {
     objectModel: DOMConversion,
     method: "toJSON",
@@ -37,12 +37,26 @@ var displayJSON = {
     arguments: ["fromPrevious"],
 };
 
+var saveElementToLocalStorage = {
+    reqName: "saveElementToLocalStorage",
+    objectModel: Storage,
+    method: "saveToLocalStorage",
+    arguments: ["domJSON", "convertElementToJSON"],
+}
+
+var displaySavedElement = {
+    reqName: "displaySavedElement",
+    objectModel: Storage,
+    method: "getFromLocalStorage",
+    arguments: ["domJSON"],
+    callBack: "displayJSON"
+}
+
 /**
  * @type {FlowRequest}
  */
 var actionFlowModelReq = {
-    flowRequest: [
-        {
+    flowRequest: [{
             reqName: "convertElementToJSON",
             objectModel: document,
             method: "getElementById",
@@ -65,6 +79,13 @@ var actionFlowModelReq = {
     ],
 };
 
+var addSecondToFirst = {
+    reqName: "addSecondToFirst",
+    objectModel: DOMConversion,
+    method: "addHTMLElementProperty",
+    arguments: ["fromParent", "innerHTML", "<div>I am nested</div>"],
+}
+
 /**
  * @type {RequestObj}
  */
@@ -74,19 +95,7 @@ var nestedFlowModelReq = {
     method: "getElementById",
     arguments: ["test"],
     callBack: "convertToJSON",
-    andThen: {
-        reqName: "saveElementToLocalStorage",
-        objectModel: Storage,
-        method: "saveToLocalStorage",
-        arguments: ["domJSON", "convertElementToJSON"],
-        andThen: {
-            reqName: "displaySavedElement",
-            objectModel: Storage,
-            method: "getFromLocalStorage",
-            arguments: ["domJSON"],
-            callBack: "displayJSON"
-        },
-    },
+    andThen: ["saveElementToLocalStorage", "displaySavedElement"]
 };
 
 var setInnerHTML = {
@@ -94,12 +103,5 @@ var setInnerHTML = {
     objectModel: document,
     method: "getElementById",
     arguments: ["first"],
-    andThen: {
-        reqName: "addSecondToFirst",
-        objectModel: DOMConversion,
-        method: "addInnerHTML",
-        arguments: ["getFirstElement", "<div>I am nested</div>"],
-    }
+    andThen: ["addSecondToFirst"]
 };
-
-
