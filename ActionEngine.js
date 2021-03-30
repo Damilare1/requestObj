@@ -4,9 +4,9 @@ class ActionEngine {
     }
 
     processReq(reqObj, resultObj = null) {
-        if (Validators.isNestedRequest(reqObj)) {
-            return this.processReqNestedObject(reqObj);
-        }
+        // if (Validators.isNestedRequest(reqObj)) {
+        //     return this.processReqNestedObject(reqObj);
+        // }
         if (Validators.isFlowRequest(reqObj)) {
             return this.processReqArray(reqObj);
         }
@@ -40,10 +40,16 @@ class ActionEngine {
         if (Operate.isObject(method)) {
             processResult = method[reqObj.arguments]
         }
+
         if (reqObj.callBack) {
             var callBack = window[reqObj.callBack];
             if (callBack) {
                 processResult = this.processReq(callBack, processResult);
+            }
+        }
+        if (reqObj.andThen) {
+            for (var i = 0; i < reqObj.andThen.length; i++) {
+                processResult = processResult[reqObj.andThen[i]]
             }
         }
         return processResult;
@@ -122,10 +128,9 @@ class ActionEngine {
 
 var engine = new ActionEngine();
 var DOMJson = engine.processReq(singleReq);
-console.log(DOMJson)
 
-engine.processReq(actionFlowModelReq)
 
-engine.processReq(setInnerHTML)
+var html = engine.processSingleReq(getInnerHTML)
+console.log(html)
 
-engine.processReq(nestedFlowModelReq)
+// engine.processReq(nestedFlowModelReq)

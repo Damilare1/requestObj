@@ -98,10 +98,10 @@ var nestedFlowModelReq = {
     andThen: ["saveElementToLocalStorage", "displaySavedElement"]
 };
 
-var setInnerHTML = {
+var getInnerHTML = {
     reqName: "getFirstElement",
     objectModel: document,
     method: "getElementById",
     arguments: ["first"],
-    andThen: ["addSecondToFirst"]
+    andThen: ["innerHTML"]
 };
