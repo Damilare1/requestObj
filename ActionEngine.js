@@ -3,14 +3,14 @@ class ActionEngine {
     this._flowResultState = {};
   }
 
-  processReq(reqObj, resultObj = null){
-    if(Validators.isNestedRequest(reqObj)){
+  processReq(reqObj, resultObj = null) {
+    if (Validators.isNestedRequest(reqObj)) {
       return this.processReqNestedObject(reqObj);
     }
-    if(Validators.isFlowRequest(reqObj)){
+    if (Validators.isFlowRequest(reqObj)) {
       return this.processReqArray(reqObj);
     }
-    if(Validators.isSingleRequest(reqObj)){
+    if (Validators.isSingleRequest(reqObj)) {
       return this.processSingleReq(reqObj, resultObj);
     }
     throw new Error("Request type not supported")
@@ -94,9 +94,15 @@ class ActionEngine {
           requestArgs[j] = reqArg[j];
         }
       }
-      
+
       var updatedRequest = { ...request, arguments: requestArgs };
-      const result = this.processSingleReq(updatedRequest);
+      var tempRequest = {};
+      for (var [key, value] of Object.entries(updatedRequest)) {
+        if (key !== "andThen") {
+          tempRequest[key] = value
+        }
+      }
+      var result = this.processReq(tempRequest);
       if (result) {
         this._flowResultState[request.reqName] = result;
       }
