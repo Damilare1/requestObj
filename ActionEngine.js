@@ -3,13 +3,26 @@ class ActionEngine {
     this._flowResultState = {};
   }
 
+  processReq(reqObj, resultObj = null) {
+    if (Validators.isNestedRequest(reqObj)) {
+      return this.processReqNestedObject(reqObj);
+    }
+    if (Validators.isFlowRequest(reqObj)) {
+      return this.processReqArray(reqObj);
+    }
+    if (Validators.isSingleRequest(reqObj)) {
+      return this.processSingleReq(reqObj, resultObj);
+    }
+    throw new Error("Request type not supported")
+  }
+
   /**
    * processes single request
    * @param {RequestObj} reqObj - request object
    * @param {unknown} [resultObj=null] - Optional parameter for passing result of previous requests
    * @returns {Promise}
    */
-  processReq(reqObj, resultObj = null) {
+  processSingleReq(reqObj, resultObj = null) {
     var method = reqObj.objectModel[reqObj.method];
     if (reqObj.arguments) {
       for (var i = 0; i < reqObj.arguments.length; i++) {
@@ -81,9 +94,15 @@ class ActionEngine {
           requestArgs[j] = reqArg[j];
         }
       }
-      
+
       var updatedRequest = { ...request, arguments: requestArgs };
-      const result = this.processReq(updatedRequest);
+      var tempRequest = {};
+      for (var [key, value] of Object.entries(updatedRequest)) {
+        if (key !== "andThen") {
+          tempRequest[key] = value
+        }
+      }
+      var result = this.processReq(tempRequest);
       if (result) {
         this._flowResultState[request.reqName] = result;
       }
@@ -104,8 +123,6 @@ var engine = new ActionEngine();
 var DOMJson = engine.processReq(singleReq);
 console.log(DOMJson)
 
-engine.processReqArray(actionFlowModelReq)
+engine.processReq(actionFlowModelReq)
 
-engine.processReqNestedObject(setInnerHTML)
-
-engine.processReqNestedObject(setInnerHTMLWithoutObjectModel)
+engine.processReq(setInnerHTML)

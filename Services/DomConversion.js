@@ -4,7 +4,7 @@ class DOMConversion {
 
   static toJSON(object, model, isAttribute = false) {
     const output = {};
-    for (const [key, value] of Object.entries(model)) {
+    for (var [key, value] of Object.entries(model)) {
       if (Operate.isObject(value)) {
         // Object keys list
         var props = Object.keys(value);
