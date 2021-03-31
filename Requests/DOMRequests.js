@@ -119,6 +119,14 @@ var getInnerHTML = {
     andThen: ["innerHTML"]
 };
 
+var getStyles = {
+    reqName: "getFirstElement",
+    objectModel: document,
+    method: "getElementById",
+    arguments: ["nestedP"],
+    andThen: ["attributes", "style", "nodeValue"]
+};
+
 var setAttributesReq = {
     method: "setAttribute",
     arguments: [

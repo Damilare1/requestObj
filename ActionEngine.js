@@ -168,7 +168,7 @@ console.log(engine.processReqArray(actionFlowModelReq2))
 
 var html = engine.processSingleReq(updateDomObject)
 
-var html = engine.processSingleReq(getInnerHTML)
+var html = engine.processSingleReq(getStyles)
 console.log(html)
 
 // engine.processReq(nestedFlowModelReq)
