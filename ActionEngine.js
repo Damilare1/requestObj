@@ -56,30 +56,32 @@ class ActionEngine {
 
 
         if (method && Operate.isFunction(method)) {
-            processResult = method.apply(reqObj.objectModel, reqObj.arguments);
-        }
-        if (Operate.isObject(method)) {
-            processResult = method[reqObj.arguments]
+            if (reqObj.andThen) {
+                var tempResult = method.apply(reqObj.objectModel, reqObj.arguments);
+                for (var i = 0; i < reqObj.andThen.length; i++) {
+                    if (!Operate.isObject(reqObj.andThen[i])) {
+                        tempResult = tempResult[reqObj.andThen[i]]
+                    } else {
+                        var args = reqObj.andThen[i].arguments;
+                        if (!reqObj.andThen[i].method) {
+                            tempResult[args[0]] = args[1]
+                        } else {
+                            tempResult[reqObj.andThen[i].method].apply(tempResult, args);
+                        }
+                    }
+                }
+                processResult = tempResult
+            } else {
+                processResult = method.apply(reqObj.objectModel, reqObj.arguments);
+
+            }
+
         }
 
         if (reqObj.callBack) {
             var callBack = window[reqObj.callBack];
             if (callBack) {
-                processResult = this.processReq(callBack, processResult);
-            }
-        }
-        if (reqObj.andThen) {
-            for (var i = 0; i < reqObj.andThen.length; i++) {
-                if (!Operate.isObject(reqObj.andThen[i])) {
-                    processResult = processResult[reqObj.andThen[i]]
-                } else {
-                    var args = reqObj.andThen[i].arguments;
-                    if (!reqObj.andThen[i].method) {
-                        processResult[args[0]] = args[1]
-                    } else {
-                        processResult[reqObj.andThen[i].method].apply(processResult, args);
-                    }
-                }
+                this.processReq(callBack, processResult);
             }
         }
 
@@ -165,6 +167,8 @@ var DOMJson = engine.processReq(singleReq);
 console.log(engine.processReqArray(actionFlowModelReq2))
 
 var html = engine.processSingleReq(updateDomObject)
+
+var html = engine.processSingleReq(getInnerHTML)
 console.log(html)
 
 // engine.processReq(nestedFlowModelReq)
