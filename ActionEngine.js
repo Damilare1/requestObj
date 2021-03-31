@@ -69,16 +69,15 @@ class ActionEngine {
             }
         }
         if (reqObj.andThen) {
-            console.log(reqObj.andThen)
             for (var i = 0; i < reqObj.andThen.length; i++) {
                 if (!Operate.isObject(reqObj.andThen[i])) {
                     processResult = processResult[reqObj.andThen[i]]
                 } else {
-                    var args = reqObj.andThen.arguments;
-                    if (!reqObj.andThen.method) {
+                    var args = reqObj.andThen[i].arguments;
+                    if (!reqObj.andThen[i].method) {
                         processResult[args[0]] = args[1]
                     } else {
-                        processResult = reqObj.method.apply(processResult, args);
+                        processResult[reqObj.andThen[i].method].apply(processResult, args);
                     }
                 }
             }

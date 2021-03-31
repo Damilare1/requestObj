@@ -120,12 +120,15 @@ var getInnerHTML = {
 };
 
 var setAttributesReq = {
+    method: "setAttribute",
     arguments: [
         "style", {
             "$ref": [
                 ['flowRequest'],
                 ['getNestedElement'],
-                ['style']
+                ['attributes'],
+                ['style'],
+                ['nodeValue']
             ],
         },
     ],
