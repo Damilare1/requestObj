@@ -120,14 +120,12 @@ var getInnerHTML = {
 };
 
 var setAttributesReq = {
-    objectModel: DOMConversion,
-    method: "addHTMLElementProperty",
-    arguments: ["fromParent",
-        "innerHTML", {
+    arguments: [
+        "style", {
             "$ref": [
                 ['flowRequest'],
                 ['getNestedElement'],
-                ['innerHTML']
+                ['style']
             ],
         },
     ],

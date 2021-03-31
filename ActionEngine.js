@@ -74,11 +74,12 @@ class ActionEngine {
                 if (!Operate.isObject(reqObj.andThen[i])) {
                     processResult = processResult[reqObj.andThen[i]]
                 } else {
-                    var indexOfParent = reqObj.andThen[i].arguments.indexOf("fromParent");
-                    if (indexOfParent !== -1) {
-                        reqObj.andThen[i].arguments[indexOfParent] = processResult;
+                    var args = reqObj.andThen.arguments;
+                    if (!reqObj.andThen.method) {
+                        processResult[args[0]] = args[1]
+                    } else {
+                        processResult = reqObj.method.apply(processResult, args);
                     }
-                    processResult = this.processSingleReq(reqObj.andThen[i])
                 }
             }
         }
