@@ -23,16 +23,37 @@ class ActionEngine {
      * @returns {Promise}
      */
     processSingleReq(reqObj, resultObj = null) {
-        var method = reqObj.objectModel[reqObj.method];
-        if (reqObj.arguments) {
-            for (var i = 0; i < reqObj.arguments.length; i++) {
-                if (reqObj.arguments[i] === "fromPrevious") {
-                    reqObj.arguments[i] = resultObj;
+        var processResult;
+        if (reqObj.andThen) {
+            for (var p = 0; p < reqObj.andThen.length; p++) {
+                if (window[reqObj.andThen]) {
+                    reqObj.andThen[p] = window[reqObj.andThen]
+                    for (var i = 0; i < reqObj.andThen[p].arguments.length; i++) {
+                        if (typeof reqObj.andThen[p].arguments[i] === 'object') {
+                            var args = reqObj.andThen[p].arguments[i].$ref;
+                            var tempArgs = this._flowResultState;
+                            for (var j = 0; j < args.length; j++) {
+                                tempArgs = tempArgs[args[j]];
+                            }
+                            reqObj.andThen[p].arguments[i] = tempArgs;
+                        }
+                    }
                 }
             }
         }
+        var method = reqObj.objectModel[reqObj.method];
+        if (reqObj.arguments && Operate.isArray(reqObj.arguments)) {
+            for (var i = 0; i < reqObj.arguments.length; i++) {
+                if (!Operate.isObject(reqObj.arguments[i]) && reqObj.arguments[i] === "fromPrevious") {
+                    reqObj.arguments[i] = resultObj;
+                } else if (Operate.isObject(reqObj.arguments[i]) && reqObj.arguments[i].$ref) {
+                    var request = this.processSingleReq(reqObj.arguments[i].$ref);
+                    reqObj.arguments[i] = request;
+                }
+            }
 
-        var processResult;
+        }
+
 
         if (method && Operate.isFunction(method)) {
             processResult = method.apply(reqObj.objectModel, reqObj.arguments);
@@ -48,10 +69,21 @@ class ActionEngine {
             }
         }
         if (reqObj.andThen) {
+            console.log(reqObj.andThen)
             for (var i = 0; i < reqObj.andThen.length; i++) {
-                processResult = processResult[reqObj.andThen[i]]
+                if (!Operate.isObject(reqObj.andThen[i])) {
+                    processResult = processResult[reqObj.andThen[i]]
+                } else {
+                    var indexOfParent = reqObj.andThen[i].arguments.indexOf("fromParent");
+                    if (indexOfParent !== -1) {
+                        reqObj.andThen[i].arguments[indexOfParent] = processResult;
+                    }
+                    processResult = this.processSingleReq(reqObj.andThen[i])
+                }
             }
         }
+
+
         return processResult;
     }
 
@@ -60,17 +92,20 @@ class ActionEngine {
      * @param {FlowRequest} reqObj - request object containing array of objects
      */
     processReqArray(reqObj) {
-            const state = this._flowResultState;
+            const state = this._flowResultState || this._flowResultState.flowRequest;
             if (Operate.isFlowRequest(reqObj) && Operate.isArray(reqObj.flowRequest)) {
                 var flowRequest = reqObj.flowRequest;
                 for (var i = 0; i < flowRequest.length; i++) {
                     var request = flowRequest[i];
                     var args = request.arguments;
-                    var requestArgs = getRequestArgs.apply(this, [args, this._flowResultState]);
+                    var requestArgs = getRequestArgs.apply(this, [args, state]);
                     var updatedRequest = {...request, arguments: requestArgs };
                     const result = this.processReq(updatedRequest);
                     if (result) {
-                        state[request.reqName] = result;
+                        state.flowRequest = {
+                            ...state.flowRequest,
+                            [request.reqName]: result
+                        };
                     }
                 }
             }
@@ -119,7 +154,6 @@ class ActionEngine {
                     }
                     recursiveThen.call(this, nestedReq);
                 }
-
             }
         }
         recursiveThen.call(this, reqObj);
@@ -128,9 +162,9 @@ class ActionEngine {
 
 var engine = new ActionEngine();
 var DOMJson = engine.processReq(singleReq);
+console.log(engine.processReqArray(actionFlowModelReq2))
 
-
-var html = engine.processSingleReq(getInnerHTML)
+var html = engine.processSingleReq(updateDomObject)
 console.log(html)
 
 // engine.processReq(nestedFlowModelReq)

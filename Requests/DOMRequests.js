@@ -62,21 +62,34 @@ var actionFlowModelReq = {
             method: "getElementById",
             arguments: ["test"],
             callBack: "convertToJSON",
+            response: [],
         },
         {
             reqName: "saveElementToLocalStorage",
             objectModel: Storage,
             method: "saveToLocalStorage",
             arguments: ["domJSON", "convertElementToJSON"],
+            response: [],
         },
         {
             reqName: "displaySavedElement",
             objectModel: Storage,
             method: "getFromLocalStorage",
             arguments: ["domJSON"],
-            callBack: "displayJSON"
+            callBack: "displayJSON",
+            response: [],
         },
     ],
+};
+
+var actionFlowModelReq2 = {
+    flowRequest: [{
+        reqName: "getNestedElement",
+        objectModel: document,
+        method: "getElementById",
+        arguments: ["nestedP"],
+        response: [],
+    }, ],
 };
 
 var addSecondToFirst = {
@@ -105,3 +118,28 @@ var getInnerHTML = {
     arguments: ["first"],
     andThen: ["innerHTML"]
 };
+
+var setAttributesReq = {
+    objectModel: DOMConversion,
+    method: "addHTMLElementProperty",
+    arguments: ["fromParent",
+        "innerHTML", {
+            "$ref": [
+                ['flowRequest'],
+                ['getNestedElement'],
+                ['innerHTML']
+            ],
+        },
+    ],
+
+
+}
+var updateDomObject = {
+    reqName: 'updateDomObject',
+    objectModel: document,
+    method: 'getElementById',
+    arguments: ['output'],
+    response: [],
+    andThen: ['setAttributesReq'],
+
+}

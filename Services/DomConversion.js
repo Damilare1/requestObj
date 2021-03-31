@@ -40,6 +40,7 @@ class DOMConversion {
      * @param {HTMLElement} input - HTML Input Element to be added into DOMElement
      */
     static addHTMLElementProperty(DOMElement, propertyName, input) {
+        console.log(DOMElement)
         DOMElement[propertyName] = input;
     }
 }
