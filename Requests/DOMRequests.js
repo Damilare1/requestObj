@@ -25,7 +25,7 @@ var singleReq = {
 var convertToJSON = {
     objectModel: DOMConversion,
     method: "toJSON",
-    arguments: ["fromPrevious", entityModel4Html],
+    arguments: ["fromPrevious", copy2HTMLModel],
 };
 
 /**

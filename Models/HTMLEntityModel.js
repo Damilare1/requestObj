@@ -29,6 +29,7 @@ const modelSchema={
 var copy2HTMLModel={
   tagName: {
     value: null,
+    type: 'string',
     process: {
       objectModel: Operate,
       method: 'isString',
@@ -37,8 +38,18 @@ var copy2HTMLModel={
   },
   attributes: {
     value: {
+      id: {
+        value: null,
+        type: 'node',
+        process: {
+          objectModel: Operate,
+          method: 'isNode',
+          arguments: ['attributes.id',2]
+        }
+      },
       class: {
         value: null,
+        type: 'node',
         process: {
           objectModel: Operate,
           method: 'isNode',
@@ -47,6 +58,7 @@ var copy2HTMLModel={
       },
       style: {
         value: null,
+        type: 'node',
         process: {
           objectModel: Operate,
           method: 'isNode',
@@ -55,6 +67,7 @@ var copy2HTMLModel={
       },
       src: {
         value: null,
+        type: 'node',
         process: {
           objectModel: Operate,
           method: 'isNode',
@@ -63,6 +76,7 @@ var copy2HTMLModel={
       },
       alt: {
         value: null,
+        type: 'node',
         process: {
           objectModel: Operate,
           method: 'isNode',
@@ -70,13 +84,15 @@ var copy2HTMLModel={
         },
       }
     },
+    type: 'object',
     process: {
       objectModel: Operate,
-      method: 'isObject',
+      method: 'isNamedNodeMap',
       arguments: ['attributes']
     }
   },children: {
     value: null,
+    type: 'array',
     process: {
       objectModel: Operate,
       method: 'isHTMLCollection',
