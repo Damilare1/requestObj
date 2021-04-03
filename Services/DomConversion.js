@@ -62,18 +62,18 @@ class DOMConversion {
     static toJSON(object,model) {
         const output={}; // Initialize output object
         // iterate over the properties of the model
-        for(var [key,value] of Object.entries(model)) {
-            if(Validators.validate(object[key],value)) {
+        for(var key in model) {
+            var value=model[key];
+            if(model.hasOwnProperty(key)&&Validators.validate(object[key],value)) {
                 if(value.type==='object') {  // check if values is a nested object
                     var nestedItem=value.value;
                     output[key]=this.toJSON(object[key],nestedItem) // Create corresponding nested object in output object
-                } else if(value.type==="node") {  // Check if value is an array
-                    output[key]=object[key].nodeValue;
                 }
                 else if(value.type==='array') {  // Check if value is an array
-                    output[key]=Array.from(object[key],function(childItem) { // If value is an array of HTMLElements, loop through each element and recurse
-                        return this.toJSON(childItem,model);
-                    }.bind(this))
+                    output[key]=[];
+                    for(var i=0;i<object[key].length;i++) {
+                        output[key].push(this.toJSON(object[key][i],model));
+                    }
                 }
                 else {
                     output[key]=object[key]||'' // if the value is neither an array or an object, assign the corresponding output[key] to the Elements' object property's value

@@ -39,17 +39,37 @@ var copy2HTMLModel={
   attributes: {
     value: {
       id: {
-        value: null,
-        type: 'node',
+        value: {
+          nodeValue: {
+            value: null,
+            type: 'string',
+            process: {
+              objectModel: Operate,
+              method: 'isString',
+              arguments: ['attributes.id']
+            }
+          }
+        },
+        type: 'object',
         process: {
           objectModel: Operate,
           method: 'isNode',
-          arguments: ['attributes.id',2]
+          arguments: ['attributes.id']
         }
       },
       class: {
-        value: null,
-        type: 'node',
+        value: {
+          nodeValue: {
+            value: null,
+            type: 'string',
+            process: {
+              objectModel: Operate,
+              method: 'isString',
+              arguments: ['attributes.id']
+            }
+          }
+        },
+        type: 'object',
         process: {
           objectModel: Operate,
           method: 'isNode',
@@ -57,8 +77,18 @@ var copy2HTMLModel={
         }
       },
       style: {
-        value: null,
-        type: 'node',
+        value: {
+          nodeValue: {
+            value: null,
+            type: 'string',
+            process: {
+              objectModel: Operate,
+              method: 'isString',
+              arguments: ['attributes.id',2]
+            }
+          }
+        },
+        type: 'object',
         process: {
           objectModel: Operate,
           method: 'isNode',
@@ -66,8 +96,18 @@ var copy2HTMLModel={
         },
       },
       src: {
-        value: null,
-        type: 'node',
+        value: {
+          nodeValue: {
+            value: null,
+            type: 'string',
+            process: {
+              objectModel: Operate,
+              method: 'isString',
+              arguments: ['attributes.id',2]
+            }
+          }
+        },
+        type: 'object',
         process: {
           objectModel: Operate,
           method: 'isNode',
@@ -75,8 +115,18 @@ var copy2HTMLModel={
         },
       },
       alt: {
-        value: null,
-        type: 'node',
+        value: {
+          nodeValue: {
+            value: null,
+            type: 'string',
+            process: {
+              objectModel: Operate,
+              method: 'isString',
+              arguments: ['attributes.id',2]
+            }
+          }
+        },
+        type: 'object',
         process: {
           objectModel: Operate,
           method: 'isNode',
