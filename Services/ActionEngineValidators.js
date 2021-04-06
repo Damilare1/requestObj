@@ -13,4 +13,11 @@ class Validators {
     static isNestedRequest(obj) {
         return obj && Operate.isObject(obj) && obj.andThen && Operate.isArray(obj.andThen);
     }
+
+    static validate(obj, model) {
+        var process = model.process;
+        var method = process.objectModel[process.method];
+        process.arguments[0] = obj;
+        return method.apply(process.objectModel, process.arguments)
+    }
 }

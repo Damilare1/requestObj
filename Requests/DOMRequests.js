@@ -25,7 +25,7 @@ var singleReq = {
 var convertToJSON = {
     objectModel: DOMConversion,
     method: "toJSON",
-    arguments: ["fromPrevious", entityModel4Html],
+    arguments: ["fromPrevious", copy2HTMLModel],
 };
 
 /**
@@ -62,21 +62,34 @@ var actionFlowModelReq = {
             method: "getElementById",
             arguments: ["test"],
             callBack: "convertToJSON",
+            response: [],
         },
         {
             reqName: "saveElementToLocalStorage",
             objectModel: Storage,
             method: "saveToLocalStorage",
             arguments: ["domJSON", "convertElementToJSON"],
+            response: [],
         },
         {
             reqName: "displaySavedElement",
             objectModel: Storage,
             method: "getFromLocalStorage",
             arguments: ["domJSON"],
-            callBack: "displayJSON"
+            callBack: "displayJSON",
+            response: [],
         },
     ],
+};
+
+var actionFlowModelReq2 = {
+    flowRequest: [{
+        reqName: "getNestedElement",
+        objectModel: document,
+        method: "getElementById",
+        arguments: ["nestedP"],
+        response: [],
+    }, ],
 };
 
 var addSecondToFirst = {
@@ -105,3 +118,37 @@ var getInnerHTML = {
     arguments: ["first"],
     andThen: ["innerHTML"]
 };
+
+var getStyles = {
+    reqName: "getFirstElement",
+    objectModel: document,
+    method: "getElementById",
+    arguments: ["nestedP"],
+    andThen: ["attributes", "style", "nodeValue"]
+};
+
+var setAttributesReq = {
+    method: "setAttribute",
+    arguments: [
+        "style", {
+            "$ref": [
+                ['flowRequest'],
+                ['getNestedElement'],
+                ['attributes'],
+                ['style'],
+                ['nodeValue']
+            ],
+        },
+    ],
+
+
+}
+var updateDomObject = {
+    reqName: 'updateDomObject',
+    objectModel: document,
+    method: 'getElementById',
+    arguments: ['output'],
+    response: [],
+    andThen: ['setAttributesReq'],
+
+}
