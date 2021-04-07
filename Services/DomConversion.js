@@ -62,20 +62,21 @@ class DOMConversion {
     static toJSON(object,model) {
         const output={}; // Initialize output object
         // iterate over the properties of the model
-        for(var key in model) {
-            var value=model[key];
-            if(model.hasOwnProperty(key)&&Validators.validate(object[key],value)) {
+        for(var key in model) { //this has to be removed from here. eachKey to be used.
+            var value=model[key]; //Instead of having a new variable have a generic Key Reponse or output
+            if(model.hasOwnProperty(key)&&Validators.validate(object[key],value)) { //operate.Every to be used,like in the eg shared earlier
                 if(value.type==='object') {  // check if values is a nested object
-                    var nestedItem=value.value;
+                    var nestedItem=value.value; 
                     output[key]=this.toJSON(object[key],nestedItem) // Create corresponding nested object in output object
                 }
                 else if(value.type==='array') {  // Check if value is an array
-                    output[key]=[];
+                    output[key]=[]; // Output has to be as per defined in Model
                     for(var i=0;i<object[key].length;i++) {
-                        output[key].push(this.toJSON(object[key][i],model));
+                        output[key].push(this.toJSON(object[key][i],model)); //Use Entity.Append from ehh repo 
                     }
                 }
                 else {
+                    //Use Entity.Set from ehh repo
                     output[key]=object[key]||'' // if the value is neither an array or an object, assign the corresponding output[key] to the Elements' object property's value
                 }
             }
