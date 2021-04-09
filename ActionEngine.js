@@ -1,183 +1,218 @@
 class ActionEngine {
     constructor() {
-        this._flowResultState={};
+      this._flowResultState = {}
     }
-//This can easily be replaced by operate.isin(key,object)
-    processReq(reqObj,resultObj=null) {
-        // if (Validators.isNestedRequest(reqObj)) {
-        //     return this.processReqNestedObject(reqObj);
-        // }
-        if(Validators.isFlowRequest(reqObj)) {
-            return this.processReqArray(reqObj);
-        }
-        if(Validators.isSingleRequest(reqObj)) {
-            return this.processSingleReq(reqObj,resultObj);
-        }
-        throw new Error("Request type not supported")
+  
+    processReq(reqObj, resultObj = null) {
+      // if (Validators.isNestedRequest(reqObj)) {
+      //     return this.processReqNestedObject(reqObj);
+      // }
+      if (Validators.isFlowRequest(reqObj)) {
+        return this.processReqArray(reqObj)
+      }
+      if (Validators.isSingleRequest(reqObj)) {
+        return this.processSingleReq(reqObj, resultObj)
+      }
+      throw new Error('Request type not supported')
     }
-
+  
+    generateReqArray(requestBody, args, str = '') {
+      var tempRequest = { ...requestBody }
+      var reqBodyString = JSON.stringify(requestBody)
+      for (var key in args) {
+        if (args.hasOwnProperty(key)) {
+          if (Operate.isObject(args));
+        }
+      }
+      return tempRequest
+    }
+  
     /**
      * processes single request
      * @param {RequestObj} reqObj - request object
      * @param {unknown} [resultObj=null] - Optional parameter for passing result of previous requests
      * @returns {Promise}
      */
-    processSingleReq(reqObj,resultObj=null) {
-        var processResult;
-        if(reqObj.andThen) {
-            for(var p=0;p<reqObj.andThen.length;p++) {
-                if(window[reqObj.andThen]) {
-                    reqObj.andThen[p]=window[reqObj.andThen]
-                    for(var i=0;i<reqObj.andThen[p].arguments.length;i++) {
-                        if(typeof reqObj.andThen[p].arguments[i]==='object') {
-                            var args=reqObj.andThen[p].arguments[i].$ref;
-                            var tempArgs=this._flowResultState;
-                            for(var j=0;j<args.length;j++) {
-                                console.log(args[j])
-                                tempArgs=tempArgs[args[j][0]];
-                                console.log(tempArgs)
-
-                            }
-                            reqObj.andThen[p].arguments[i]=tempArgs;
-                        }
-                    }
+  processSingleReq(reqObj, resultObj = null) {
+      var processResult;
+      if (reqObj.andThen) {
+        for (var p = 0; p < reqObj.andThen.length; p++) {
+          if (window[reqObj.andThen]) {
+            reqObj.andThen[p] = window[reqObj.andThen]
+            for (var i = 0; i < reqObj.andThen[p].arguments.length; i++) {
+              if (typeof reqObj.andThen[p].arguments[i] === 'object') {
+                var args = reqObj.andThen[p].arguments[i].$ref
+                var tempArgs = this._flowResultState
+                for (var j = 0; j < args.length; j++) {
+                  tempArgs = tempArgs[args[j][0]]
                 }
+                reqObj.andThen[p].arguments[i] = tempArgs
+              }
             }
+          }
         }
-        //what are you trying to do here?
-        var method=reqObj.objectModel[reqObj.method];
-        if(reqObj.arguments&&Operate.isArray(reqObj.arguments)) {
-            for(var i=0;i<reqObj.arguments.length;i++) {
-                if(!Operate.isObject(reqObj.arguments[i])&&reqObj.arguments[i]==="fromPrevious") {
-                    reqObj.arguments[i]=resultObj;
-                } else if(Operate.isObject(reqObj.arguments[i])&&reqObj.arguments[i].$ref) {
-                    var request=this.processSingleReq(reqObj.arguments[i].$ref);
-                    reqObj.arguments[i]=request;
-                }
-            }
-
+      }
+      if(reqObj.objectModel === 'fromPrevious'){
+        reqObj.objectModel = resultObj;
+      }
+      var method = reqObj.objectModel[reqObj.method]
+      if (reqObj.arguments && Operate.isArray(reqObj.arguments)) {
+        for (var i = 0; i < reqObj.arguments.length; i++) {
+          if (
+            !Operate.isObject(reqObj.arguments[i]) &&
+            reqObj.arguments[i] === 'fromPrevious'
+          ) {
+            reqObj.arguments[i] = resultObj
+          } else if (
+            Operate.isObject(reqObj.arguments[i]) &&
+            reqObj.arguments[i].$ref
+          ) {
+            var request = this.processSingleReq(reqObj.arguments[i].$ref)
+            reqObj.arguments[i] = request
+          }
         }
-
-
-        if(method&&Operate.isFunction(method)) {
-            if(reqObj.andThen) {
-                var tempResult=method.apply(reqObj.objectModel,reqObj.arguments);
-                for(var i=0;i<reqObj.andThen.length;i++) {
-                    if(!Operate.isObject(reqObj.andThen[i])) {
-                        tempResult=tempResult[reqObj.andThen[i]]
-                    } else {
-                        var args=reqObj.andThen[i].arguments;
-                        if(!reqObj.andThen[i].method) {
-                            tempResult[args[0]]=args[1]
-                        } else {
-                            tempResult[reqObj.andThen[i].method].apply(tempResult,args);
-                        }
-                    }
-                }
-                processResult=tempResult
+      }
+  
+      if (method && Operate.isFunction(method)) {
+        if (reqObj.andThen) {
+          var tempResult = method.apply(reqObj.objectModel, reqObj.arguments)
+          for (var i = 0; i < reqObj.andThen.length; i++) {
+            if (!Operate.isObject(reqObj.andThen[i])) {
+              tempResult = tempResult[reqObj.andThen[i]]
             } else {
-                processResult=method.apply(reqObj.objectModel,reqObj.arguments);
-
+              var args = reqObj.andThen[i].arguments
+              if (!reqObj.andThen[i].method) {
+                tempResult[args[0]] = args[1]
+              } else {
+                tempResult[reqObj.andThen[i].method].apply(tempResult, args)
+              }
             }
-
+          }
+          processResult = tempResult
+        } else {
+            // console.log(reqObj.reqName, reqObj.objectModel, method, reqObj.arguments)
+          processResult = method.apply(reqObj.objectModel, reqObj.arguments)
         }
-
-        if(reqObj.callBack) {
-            var callBack=window[reqObj.callBack];
-            if(callBack) {
-                processResult=this.processReq(callBack,processResult);
-            }
+      }
+      if (reqObj.callBack) {
+        var callBack = window[reqObj.callBack]
+        if (callBack) {
+          let result = this.processReq(callBack, processResult);
+          if(result){
+            processResult = result
+          }
         }
-
-
-        return processResult;
+      }
+      return processResult
     }
+  
+    processMultiReqArray(requestBody, args) {
+      for (var i = 0; i < args.length; i++) {
+        requestBody.flowRequest[0].arguments = args[i]
+        this.processReqArray(requestBody)
+      }
+    }
+  
 
     /**
      * This method is used for parallel requests
      * @param {FlowRequest} reqObj - request object containing array of objects
      */
     processReqArray(reqObj) {
-        const state=this._flowResultState;
-        if(!state.flowRequest) {
-            state.flowRequest={}
-        }
-
-        if(Operate.isFlowRequest(reqObj)&&Operate.isArray(reqObj.flowRequest)) {
-            var flowRequest=reqObj.flowRequest;
-            for(var i=0;i<flowRequest.length;i++) {
-                var request=flowRequest[i];
-                var args=request.arguments;
-                var requestArgs=getRequestArgs.apply(this,[args,state.flowRequest]);
-                var updatedRequest={...request,arguments: requestArgs};
-                const result=this.processReq(updatedRequest);
-                if(result) {
-                    state.flowRequest={
-                        ...state.flowRequest,
-                        [request.reqName]: result
-                    };
-                }
+      const state = this._flowResultState
+      if (!state.flowRequest) {
+        state.flowRequest = {}
+      }
+  
+      if (Operate.isFlowRequest(reqObj) && Operate.isArray(reqObj.flowRequest)) {
+        var flowRequest = reqObj.flowRequest
+        for (var i = 0; i < flowRequest.length; i++) {
+          var request = flowRequest[i];
+          console.log(request.reqName)
+          if(Operate.isString(request.objectModel) && state.flowRequest[request.objectModel]){
+            request.objectModel = state.flowRequest[request.objectModel]
+          }
+          var args = request.arguments;
+          var requestArgs = getRequestArgs.apply(this, [args, state.flowRequest])
+          var updatedRequest = { ...request, arguments: requestArgs }
+          const result = this.processReq(updatedRequest);
+          console.log(result)
+          updatedRequest.response = result;
+          if (result) {
+            state.flowRequest = {
+              ...state.flowRequest,
+              [request.reqName]: result,
             }
+          }
         }
-
-        return null;
+      }
+  
+      return null
     }
     /**
      * This method is used for nested requests
      * @param {RequestObj} reqObj - request object containing nested requests
      */
     processReqNestedObject(reqObj) {
-        /**
-         * This method is used for recursion and ensuring the requests are performed sequentially
-         * @param {RequestObj} request - Current request object
-         */
-        function recursiveThen(request) {
-            var reqArg=request.arguments;
-            var requestArgs=getRequestArgs.apply(this,[reqArg,this._flowResultState])
-            var updatedRequest={...request,arguments: requestArgs};
-            var tempRequest={};
-            for(var [key,value] of Object.entries(updatedRequest)) {
-                if(key!=="andThen") {
-                    tempRequest[key]=value
-                }
-            }
-            var result=this.processReq(tempRequest);
-            if(result) {
-                this._flowResultState[request.reqName]=result;
-            }
-
-            if(request.andThen&&Operate.isArray(request.andThen)) {
-                var nestedReqArray=request.andThen;
-                for(var i=0;i<nestedReqArray.length;i++) {
-                    var nestedReq=window[nestedReqArray[i]];
-                    if(nestedReq) {
-                        if(nestedReq.objectModel==='fromParent') {
-                            nestedReq.objectModel=result;
-                        }
-                        var indexOfFromPrevious=nestedReq.arguments.indexOf("fromPrevious");
-                        var indexOfParentResult=nestedReq.arguments.indexOf("fromParent");
-                        if(indexOfParentResult!=-1) {
-                            nestedReq.arguments[indexOfParentResult]=result
-                        }
-                        if(indexOfFromPrevious!=-1&&i>0) {
-                            nestedReq.arguments[indexOfFromPrevious]=this._flowResultState[window[nestedReqArray[i-1]].reqName]
-                        }
-                    }
-                    recursiveThen.call(this,nestedReq);
-                }
-            }
+      /**
+       * This method is used for recursion and ensuring the requests are performed sequentially
+       * @param {RequestObj} request - Current request object
+       */
+      function recursiveThen(request) {
+        var reqArg = request.arguments
+        var requestArgs = getRequestArgs.apply(this, [
+          reqArg,
+          this._flowResultState,
+        ])
+        var updatedRequest = { ...request, arguments: requestArgs }
+        var tempRequest = {}
+        for (var [key, value] of Object.entries(updatedRequest)) {
+          if (key !== 'andThen') {
+            tempRequest[key] = value
+          }
         }
-        recursiveThen.call(this,reqObj);
+        var result = this.processReq(tempRequest)
+        if (result) {
+          this._flowResultState[request.reqName] = result
+        }
+  
+        if (request.andThen && Operate.isArray(request.andThen)) {
+          var nestedReqArray = request.andThen
+          for (var i = 0; i < nestedReqArray.length; i++) {
+            var nestedReq = window[nestedReqArray[i]]
+            if (nestedReq) {
+              if (nestedReq.objectModel === 'fromParent') {
+                nestedReq.objectModel = result
+              }
+              var indexOfFromPrevious = nestedReq.arguments.indexOf(
+                'fromPrevious',
+              )
+              var indexOfParentResult = nestedReq.arguments.indexOf('fromParent')
+              if (indexOfParentResult != -1) {
+                nestedReq.arguments[indexOfParentResult] = result
+              }
+              if (indexOfFromPrevious != -1 && i > 0) {
+                nestedReq.arguments[indexOfFromPrevious] = this._flowResultState[
+                  window[nestedReqArray[i - 1]].reqName
+                ]
+              }
+            }
+            recursiveThen.call(this, nestedReq)
+          }
+        }
+      }
+      recursiveThen.call(this, reqObj)
     }
-}
-
-var engine=new ActionEngine();
-var DOMJson=engine.processReq(singleReq);
-console.log(engine.processReqArray(actionFlowModelReq))
-
-// var html = engine.processSingleReq(updateDomObject)
-
-// var html = engine.processSingleReq(getStyles)
-// console.log(html)
-
-// engine.processReq(nestedFlowModelReq)
+  }
+  
+  var engine = new ActionEngine()
+  // var DOMJson = engine.processReq(singleReq)
+  console.log(engine.processReqArray(openFileFlowRequest))
+  
+  var html = engine.processSingleReq(updateDomObject)
+  
+  // var html = engine.processSingleReq(getStyles)
+  // console.log(html)
+  
+  // engine.processReq(nestedFlowModelReq)
+  

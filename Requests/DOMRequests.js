@@ -1,7 +1,7 @@
 /**
  * @type RequestObj
  */
-var getElement = {
+ var getElement = {
     reqName: "getElement", //CommanName
     objectModel: document,
     method: "getElementById",
@@ -152,3 +152,41 @@ var updateDomObject = {
     andThen: ['setAttributesReq'],
 
 }
+
+var addFileOpenEventListener = {
+    reqName: 'addFileOpenEventListener',
+    objectModel: 'fromPrevious',
+    method: 'addEventListener',
+    arguments: ['click', processFSInstance.OpenFileV2],
+    response: [],
+}
+
+/**
+ * @type {FlowRequest}
+ */
+ var openFileFlowRequest = {
+    flowRequest: [{
+            reqName: "addEventListenerReq",
+            objectModel: processFSInstance,
+            method: "OpenFileV2",
+            arguments: [],
+            callBack: "",
+            response: [],
+        },
+        {
+            reqName: "saveFileToLocalStorage",
+            objectModel: Storage,
+            method: "saveToLocalStorage",
+            arguments: ["file", "clickReq"],
+            response: [],
+        },
+        {
+            reqName: "displaySavedElement",
+            objectModel: Storage,
+            method: "getFromLocalStorage",
+            arguments: ["file"],
+            callBack: "displayJSON",
+            response: [],
+        },
+    ],
+};
